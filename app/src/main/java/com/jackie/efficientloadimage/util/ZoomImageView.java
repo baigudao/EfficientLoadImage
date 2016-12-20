@@ -9,7 +9,9 @@ import android.view.MotionEvent;
 import android.view.View;
 
 /**
- * Created by Administrator on 2016/12/20.
+ * 自定义的ImageView控制，可对图片进行多点触控缩放和拖动
+ *
+ * @author guolin
  */
 public class ZoomImageView extends View {
 
@@ -142,8 +144,7 @@ public class ZoomImageView extends View {
     /**
      * 将待展示的图片设置进来。
      *
-     * @param bitmap
-     *            待展示的Bitmap对象
+     * @param bitmap 待展示的Bitmap对象
      */
     public void setImageBitmap(Bitmap bitmap) {
         sourceBitmap = bitmap;
@@ -151,7 +152,8 @@ public class ZoomImageView extends View {
     }
 
     @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    protected void onLayout(boolean changed, int left, int top, int right,
+                            int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         if (changed) {
             // 分别获取到ZoomImageView的宽度和高度
@@ -162,6 +164,11 @@ public class ZoomImageView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (initRatio == totalRatio) {
+            getParent().requestDisallowInterceptTouchEvent(false);
+        } else {
+            getParent().requestDisallowInterceptTouchEvent(true);
+        }
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_POINTER_DOWN:
                 if (event.getPointerCount() == 2) {
@@ -169,6 +176,7 @@ public class ZoomImageView extends View {
                     lastFingerDis = distanceBetweenFingers(event);
                 }
                 break;
+            case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_MOVE:
                 if (event.getPointerCount() == 1) {
                     // 只有单指按在屏幕上移动时，为拖动状态
@@ -256,7 +264,9 @@ public class ZoomImageView extends View {
             case STATUS_INIT:
                 initBitmap(canvas);
             default:
-                canvas.drawBitmap(sourceBitmap, matrix, null);
+                if (sourceBitmap != null) {
+                    canvas.drawBitmap(sourceBitmap, matrix, null);
+                }
                 break;
         }
     }
@@ -278,7 +288,8 @@ public class ZoomImageView extends View {
         if (currentBitmapWidth < width) {
             translateX = (width - scaledWidth) / 2f;
         } else {
-            translateX = totalTranslateX * scaledRatio + centerPointX * (1 - scaledRatio);
+            translateX = totalTranslateX * scaledRatio + centerPointX
+                    * (1 - scaledRatio);
             // 进行边界检查，保证图片缩放后在水平方向上不会偏移出屏幕
             if (translateX > 0) {
                 translateX = 0;
@@ -290,7 +301,8 @@ public class ZoomImageView extends View {
         if (currentBitmapHeight < height) {
             translateY = (height - scaledHeight) / 2f;
         } else {
-            translateY = totalTranslateY * scaledRatio + centerPointY * (1 - scaledRatio);
+            translateY = totalTranslateY * scaledRatio + centerPointY
+                    * (1 - scaledRatio);
             // 进行边界检查，保证图片缩放后在垂直方向上不会偏移出屏幕
             if (translateY > 0) {
                 translateY = 0;
